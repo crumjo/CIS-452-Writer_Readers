@@ -73,8 +73,8 @@ int main (int argc, char **argv)
         perror("Error: Unable to attach to shared memory.\n");
         exit (1);
     }
-//    shmPtr -> display = 2;
-//    shmPtr -> token = 0;
+    shmPtr -> display = 2;
+    shmPtr -> token = 0;
     
     while (1)
     {
