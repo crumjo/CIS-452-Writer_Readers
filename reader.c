@@ -4,7 +4,6 @@
  * @authors Joshua Crum & Dylan Shoup
  */
 
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,37 +14,14 @@
 #include <unistd.h>
 #include "memory.h"
 
-int shmId;
-struct mem_seg *shmPtr;
-
-
-/**
- *
- */
-void sigHandler (int sigNum)
-{
-    printf (" interrupt received.\n");
-    
-    /* Detatch and delete shared segment. */
-    printf ("Detatching shared memory segment...\n");
-    if (shmdt (shmPtr) < 0)
-    {
-        perror ("Detatch failed.\n");
-        exit (1);
-    }
-    
-    sleep (1);
-    printf ("Program will now exit.\n");
-    exit (0);
-}
-
 
 int main (int argc, char **argv)
 {
-    signal(SIGINT, sigHandler);
     key_t shmKey;
-    char *path = "/Users/Josh/key";
+    char *path = "key";
+    int shmId;
     int size = 4096;
+    struct mem_seg *shmPtr;
     
     /* Create the key. */
     shmKey = ftok (path, 'x');
@@ -64,16 +40,25 @@ int main (int argc, char **argv)
         exit (1);
     }
     
-    printf ("Reader attached to memory.\n");
+    printf ("Reader attached to memory. Display: %d\n", shmPtr -> display);
     
+    int turn = shmPtr->display;
+    
+
     while (1)
     {
-        while ((shmPtr -> token == 1) || (shmPtr -> display != 0))
+        
+//        if (shmPtr -> display == )
+        
+        //while ((shmPtr -> token == 1) || (shmPtr -> display != 0))
+	while(shmPtr->display!=turn)
             ;
-        shmPtr -> token = 1;
+        //shmPtr -> token = 1;
         printf("Reader found :%s: in shared memory.\n", shmPtr -> msg);
         shmPtr -> display++;
-        shmPtr -> token = 0;
+        if(turn == 2){
+	    shmPtr->display = 0;
+	}
     }
     
     return 0;

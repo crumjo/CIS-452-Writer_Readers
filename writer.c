@@ -55,7 +55,7 @@ int main (int argc, char **argv)
 {
     signal(SIGINT, sigHandler);
     key_t shmKey;
-    char *path = "/Users/Josh/key";
+    char *path = "key";
     
     /* Create the key. */
     shmKey = ftok (path, 'x');
@@ -73,14 +73,19 @@ int main (int argc, char **argv)
         perror("Error: Unable to attach to shared memory.\n");
         exit (1);
     }
-    shmPtr -> display = 2;
-    shmPtr -> token = 0;
+//
+// I basically used the turn variable and display variable to traverse the writer, then 1 reader, and then the other in
+// order every time.
+
+    shmPtr -> display = 0;
     
+    int turn = 0;
     while (1)
     {
-        while ((shmPtr -> display != 2) || (shmPtr -> token == 1))
-            ;
-        shmPtr -> token = 1;
+        
+        while(shmPtr ->display!=turn)
+	    ;
+        //shmPtr -> token = 1;
         printf("Enter a message: ");
         char wmsg[32];
         fgets (wmsg, 32, stdin);
@@ -95,9 +100,7 @@ int main (int argc, char **argv)
         /* Write to shared memory. */
         printf ("Writing message '%s' to shared memory...\n", wmsg);
         memcpy (shmPtr -> msg, wmsg, sizeof(wmsg));
-        shmPtr -> display = 0;
-        shmPtr -> token = 0;
-        printf("token: %d \t display: %d\n", shmPtr -> token, shmPtr -> display);
-    }
+        shmPtr -> display++;
+            }
     return 0;
 }
