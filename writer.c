@@ -27,7 +27,7 @@ int main (int argc, char **argv)
     shmKey = ftok (path, 'x');
 
 	/* Create the shared memory segment. */	
-	if ((shmId = shmget (IPC_PRIVATE, size, IPC_CREAT|S_IRUSR|S_IWUSR)) < 0)
+	if ((shmId = shmget (shmKey, size, IPC_CREAT|S_IRUSR|S_IWUSR)) < 0)
 	{
 		perror("Error: Unable to obtain shared memory.\n");
 		exit (1);
@@ -56,4 +56,15 @@ int main (int argc, char **argv)
     memcpy (shmPtr, msg, sizeof(msg));
  	
     /* Deallocate after done accepting input. */
+    pause();
+    if (shmdt (shmPtr) < 0) {
+        perror ("just can't let go\n");
+        exit (1);
+    }
+    
+    if (shmctl (shmId, IPC_RMID, 0) < 0) {
+        perror ("can't deallocate\n");
+        exit(1);
+    }
+    return 0;
 }
