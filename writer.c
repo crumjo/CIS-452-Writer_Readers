@@ -29,12 +29,14 @@ void sigHandler (int sigNum)
     printf (" interrupt received.\n");
     
     /* Detatch and delete shared segment. */
+    printf ("Detatching shared memory segment...\n");
     if (shmdt (shmPtr) < 0)
     {
         perror ("Detatch failed.\n");
         exit (1);
     }
     
+    printf ("Deleting shared memory segment...\n");
     if (shmctl (shmId, IPC_RMID, 0) < 0) {
         perror ("Deallocate failed.\n");
         exit (1);
@@ -71,11 +73,12 @@ int main (int argc, char **argv)
         perror("Error: Unable to attach to shared memory.\n");
         exit (1);
     }
-    shmPtr -> display = 2;
-    shmPtr -> token = 1;
+//    shmPtr -> display = 2;
+//    shmPtr -> token = 0;
+    
     while (1)
     {
-        while ((shmPtr -> display != 2) && (shmPtr -> token == 1))
+        while ((shmPtr -> display != 2) || (shmPtr -> token == 1))
             ;
         shmPtr -> token = 1;
         printf("Enter a message: ");
@@ -94,6 +97,7 @@ int main (int argc, char **argv)
         memcpy (shmPtr -> msg, wmsg, sizeof(wmsg));
         shmPtr -> display = 0;
         shmPtr -> token = 0;
+        printf("token: %d \t display: %d\n", shmPtr -> token, shmPtr -> display);
     }
     return 0;
 }

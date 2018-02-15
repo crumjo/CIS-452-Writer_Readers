@@ -40,11 +40,15 @@ int main (int argc, char **argv)
         exit (1);
     }
     
-    printf ("Reader attached to memory.\n");
+    printf ("Reader attached to memory. Display: %d\n", shmPtr -> display);
+    int turn;
     
     while (1)
     {
-        while ((shmPtr -> token == 1) && (shmPtr -> display < 2))
+        turn = 0;
+//        if (shmPtr -> display == )
+        
+        while ((shmPtr -> token == 1) || (shmPtr -> display != 0))
             ;
         shmPtr -> token = 1;
         printf("Reader found :%s: in shared memory.\n", shmPtr -> msg);
