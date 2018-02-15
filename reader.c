@@ -4,6 +4,7 @@
  * @authors Joshua Crum & Dylan Shoup
  */
 
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,14 +15,37 @@
 #include <unistd.h>
 #include "memory.h"
 
+int shmId;
+struct mem_seg *shmPtr;
+
+
+/**
+ *
+ */
+void sigHandler (int sigNum)
+{
+    printf (" interrupt received.\n");
+    
+    /* Detatch and delete shared segment. */
+    printf ("Detatching shared memory segment...\n");
+    if (shmdt (shmPtr) < 0)
+    {
+        perror ("Detatch failed.\n");
+        exit (1);
+    }
+    
+    sleep (1);
+    printf ("Program will now exit.\n");
+    exit (0);
+}
+
 
 int main (int argc, char **argv)
 {
+    signal(SIGINT, sigHandler);
     key_t shmKey;
     char *path = "/Users/Josh/key";
-    int shmId;
     int size = 4096;
-    struct mem_seg *shmPtr;
     
     /* Create the key. */
     shmKey = ftok (path, 'x');
@@ -50,7 +74,6 @@ int main (int argc, char **argv)
         printf("Reader found :%s: in shared memory.\n", shmPtr -> msg);
         shmPtr -> display++;
         shmPtr -> token = 0;
-        sleep (1);
     }
     
     return 0;
