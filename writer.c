@@ -73,10 +73,12 @@ int main (int argc, char **argv)
         perror("Error: Unable to attach to shared memory.\n");
         exit (1);
     }
-//
-// I basically used the turn variable and display variable to traverse the writer, then 1 reader, and then the other in
-// order every time.
-
+    
+    /**
+     * I basically used the turn variable and display variable to traverse
+     * the writer, then 1 reader, and then the other in order every time.
+     */
+    
     shmPtr -> display = 0;
     
     int turn = 0;
@@ -84,7 +86,7 @@ int main (int argc, char **argv)
     {
         
         while(shmPtr ->display!=turn)
-	    ;
+            ;
         //shmPtr -> token = 1;
         printf("Enter a message: ");
         char wmsg[32];
@@ -101,6 +103,6 @@ int main (int argc, char **argv)
         printf ("Writing message '%s' to shared memory...\n", wmsg);
         memcpy (shmPtr -> msg, wmsg, sizeof(wmsg));
         shmPtr -> display++;
-            }
+    }
     return 0;
 }
