@@ -1,9 +1,10 @@
 /**
  * Echo process communication between a single writer and two readers.
- * 
+ *
  * @authors Joshua Crum & Dylan Shoup
  */
 
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,60 +12,88 @@
 #include <sys/stat.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <sys/wait.h>
 #include <unistd.h>
+#include "memory.h"
+
+int shmId;
+int size = 4096;
+struct mem_seg *shmPtr;
 
 
-
-int main (int argc, char **argv)
+/**
+ *
+ */
+void sigHandler (int sigNum)
 {
-    key_t shmKey;
-    char *path = "/Users/Josh/key";
-	int shmId;
-	int size = 4096;
-	char *shmPtr;
+    printf (" interrupt received.\n");
     
-    /* Create the key. */
-    shmKey = ftok (path, 'x');
-
-	/* Create the shared memory segment. */	
-	if ((shmId = shmget (shmKey, size, IPC_CREAT|S_IRUSR|S_IWUSR)) < 0)
-	{
-		perror("Error: Unable to obtain shared memory.\n");
-		exit (1);
-	}
-
-	/* Attach the process to the shared memory. */
-	if ((shmPtr = shmat (shmId, 0, 0)) == (void *) -1)
-	{
-		perror("Error: Unable to attach to shared memory.\n");
-		exit (1);
-	}
-
-    printf("Enter a message: ");
-    char msg[32];
-    fgets (msg, 32, stdin);
-    
-    /* Remove trailing new line. */
-    int len = strlen (msg);
-    if (msg[len - 1] == '\n')
+    /* Detatch and delete shared segment. */
+    if (shmdt (shmPtr) < 0)
     {
-        msg[len - 1] = '\0';
-    }
-    
-    /* Write to shared memory. */
-    printf ("Writing message '%s' to shared memory...\n", msg);
-    memcpy (shmPtr, msg, sizeof(msg));
- 	
-    /* Deallocate after done accepting input. */
-    pause();
-    if (shmdt (shmPtr) < 0) {
-        perror ("just can't let go\n");
+        perror ("Detatch failed.\n");
         exit (1);
     }
     
     if (shmctl (shmId, IPC_RMID, 0) < 0) {
-        perror ("can't deallocate\n");
-        exit(1);
+        perror ("Deallocate failed.\n");
+        exit (1);
+    }
+    
+    sleep (1);
+    printf ("Program will now exit.\n");
+    exit (0);
+}
+
+
+/**
+ *
+ */
+int main (int argc, char **argv)
+{
+    signal(SIGINT, sigHandler);
+    key_t shmKey;
+    char *path = "/Users/Josh/key";
+    
+    /* Create the key. */
+    shmKey = ftok (path, 'x');
+    
+    /* Create the shared memory segment. */
+    if ((shmId = shmget (shmKey, size, IPC_CREAT|S_IRUSR|S_IWUSR)) < 0)
+    {
+        perror("Error: Unable to obtain shared memory.\n");
+        exit (1);
+    }
+    
+    /* Attach the process to the shared memory. */
+    if ((shmPtr = shmat (shmId, 0, 0)) == (void *) -1)
+    {
+        perror("Error: Unable to attach to shared memory.\n");
+        exit (1);
+    }
+    shmPtr -> display = 2;
+    shmPtr -> token = 1;
+    while (1)
+    {
+        while ((shmPtr -> display != 2) && (shmPtr -> token == 1))
+            ;
+        shmPtr -> token = 1;
+        printf("Enter a message: ");
+        char wmsg[32];
+        fgets (wmsg, 32, stdin);
+        
+        /* Remove trailing new line. */
+        int len = strlen (wmsg);
+        if (wmsg[len - 1] == '\n')
+        {
+            wmsg[len - 1] = '\0';
+        }
+        
+        /* Write to shared memory. */
+        printf ("Writing message '%s' to shared memory...\n", wmsg);
+        memcpy (shmPtr -> msg, wmsg, sizeof(wmsg));
+        shmPtr -> display = 0;
+        shmPtr -> token = 0;
     }
     return 0;
 }

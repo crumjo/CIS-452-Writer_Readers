@@ -12,7 +12,7 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <unistd.h>
-
+#include "memory.h"
 
 
 int main (int argc, char **argv)
@@ -21,7 +21,7 @@ int main (int argc, char **argv)
     char *path = "/Users/Josh/key";
     int shmId;
     int size = 4096;
-    char *shmPtr;
+    struct mem_seg *shmPtr;
     
     /* Create the key. */
     shmKey = ftok (path, 'x');
@@ -42,7 +42,15 @@ int main (int argc, char **argv)
     
     printf ("Reader attached to memory.\n");
     
-    printf("Reader found :%s: in shared memory.\n", shmPtr);
+    while (1)
+    {
+        while ((shmPtr -> token == 1) && (shmPtr -> display < 2))
+            ;
+        shmPtr -> token = 1;
+        printf("Reader found :%s: in shared memory.\n", shmPtr -> msg);
+        shmPtr -> display++;
+        shmPtr -> token = 0;
+    }
     
     return 0;
 }
